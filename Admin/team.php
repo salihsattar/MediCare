@@ -1,8 +1,6 @@
 <?php
     include 'includes/header.php';
 ?>
-
-    <!-- Page Header Start -->
     <div class="container-fluid page-header py-5 mb-5 wow fadeIn" data-wow-delay="0.1s">
         <div class="container py-5">
             <h1 class="display-3 text-white mb-3 animated slideInDown">Doctors</h1>
@@ -15,10 +13,6 @@
             </nav>
         </div>
     </div>
-    <!-- Page Header End -->
-
-
-    <!-- Team Start -->
     <div class="container-xxl py-5">
         <div class="container">
             <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
@@ -157,9 +151,11 @@
             </div>
         </div>
     </div>
-    <!-- Team End -->
-        
+
 
 <?php
     include 'includes/footer.php';
 ?>
+
+
+<!-- Muhammad Salih -->
