@@ -1,6 +1,19 @@
 <?php
 include 'includes/header.php';
+include 'includes/db.php';
+
+if (!isset($_SESSION['user_id'])) {
+    echo "<script>window.location.href='login.php';</script>";
+    exit;
+}
+
+$user_id=$_SESSION['user_id'];
+$selectQuery="SELECT * FROM appointments where user_id=$user_id";
+$runQuery=mysqli_query($conn,$selectQuery);
+
+
 ?>
+
 <div class="container-fluid page-header py-5 mb-5 wow fadeIn" data-wow-delay="0.1s">
     <div class="container py-5">
         <h1 class="display-3 text-white mb-3 animated slideInDown">View Appointment</h1>
@@ -13,17 +26,42 @@ include 'includes/header.php';
         </nav>
     </div>
 </div>
-<div class="container-xxl py-5">
-    <div class="container">
-        <div class="row g-5">
-            <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
-                <p class="d-inline-block border rounded-pill py-1 px-4">Appointments</p>
-                <h1 class="mb-4">No Any Appointment Yet!</h1>
-            </div>
 
-        </div>
+<div class="container-xxl py-2">
+    <div class="container mt-2">
+        <table class="table table-bordered table-striped">
+            <thead class="table">
+                <tr>
+                    <th>ID</th>
+                    <th>Doctor</th>
+                    <th>Appoitment Date</th>
+                    <th>Description</th>
+                    <th>Timimg</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+
+                while ($data = mysqli_fetch_array($runQuery)) {
+                    ?>
+                    <tr>
+                        <td><?php echo $data['id']; ?></td>
+                        <td><?php echo $data['doctor_name']; ?></td>
+                        <td><?php echo $data['appointment_date']; ?></td>
+                        <td><?php echo $data['description']; ?></td>
+                        <td></td>
+
+                        <td><?php echo $data['status']; ?></td>
+                    </tr>
+                    <?php
+                }
+
+                ?>
+            </tbody>
+        </table>
     </div>
-</div>>
-<?php
-include 'includes/footer.php';
-?>
+
+    <?php
+    include 'includes/footer.php';
+    ?>
