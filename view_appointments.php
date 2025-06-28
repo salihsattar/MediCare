@@ -36,7 +36,7 @@ $runQuery=mysqli_query($conn,$selectQuery);
                     <th>Doctor</th>
                     <th>Appoitment Date</th>
                     <th>Description</th>
-                    <th>Timimg</th>
+                    <!-- <th>Timimg</th> -->
                     <th>Status</th>
                 </tr>
             </thead>
@@ -50,7 +50,7 @@ $runQuery=mysqli_query($conn,$selectQuery);
                         <td><?php echo $data['doctor_name']; ?></td>
                         <td><?php echo $data['appointment_date']; ?></td>
                         <td><?php echo $data['description']; ?></td>
-                        <td></td>
+                        <!-- <td></td> -->
 
                         <td><?php echo $data['status']; ?></td>
                     </tr>
