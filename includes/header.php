@@ -53,8 +53,9 @@
             <a href="team.php" class="nav-item nav-link text-light">Doctors</a>
             <a href="contact.php" class="nav-item nav-link text-light">Contact</a>
             <a href="about.php" class="nav-item nav-link text-light">About</a>
-
-            <?php if (isset($_SESSION['user_id'])) { ?>
+            <?php if (isset($_SESSION['user_id']) && isset($_SESSION['is_admin'])==1) { ?>
+                <a href="manage_appointments.php" class="nav-item nav-link text-light">Manage Appointments</a>
+            <?php }  else if (isset($_SESSION['user_id'])) { ?>
                 <a href="appointment.php" class="nav-item nav-link text-light">Appointment</a>
                 <a href="view_appointments.php" class="nav-item nav-link text-light">My Appointments</a>
             <?php } else { ?>

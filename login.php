@@ -19,6 +19,7 @@ if (isset($_POST['login-btn'])) {
             $user = mysqli_fetch_assoc($result);
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['full_name'] = $user['full_name'];
+            $_SESSION['is_admin'] = $user['is_admin'];
             header("Location: index.php");
             exit();
         } else {
