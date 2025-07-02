@@ -10,9 +10,14 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 
 $selectQuery = "
-    SELECT appointments.id AS appointment_id, appointments.*, users.full_name 
+    SELECT 
+        appointments.id AS appointment_id, 
+        appointments.*, 
+        users.full_name AS patient_name, 
+        doctors.full_name AS doctor_name
     FROM appointments 
     JOIN users ON users.id = appointments.user_id
+    JOIN doctors ON doctors.id = appointments.doctor_id
 ";
 $runQuery = mysqli_query($conn, $selectQuery);
 ?>
@@ -118,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <tr>
                         <td><?php echo $data['appointment_id']; ?></td>
                         <td><?php echo $data['doctor_name']; ?></td>
-                        <td><?php echo $data['full_name']; ?></td>
+                        <td><?php echo $data['patient_name']; ?></td>
                         <td><?php echo $data['appointment_date']; ?></td>
                         <td><?php echo $data['description']; ?></td>
                         <td>
@@ -131,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </a>
                             <?php } else { ?>
                                 <span class="text-<?php echo ($data['status'] == 'Approved') ? 'success' : 'danger'; ?>">
-                                    <?php echo $data['status']; ?>
+                                    <?php echo ucfirst($data['status']); ?>
                                 </span>
                             <?php } ?>
                         </td>
@@ -145,13 +150,16 @@ document.addEventListener('DOMContentLoaded', function () {
 <?php
 include 'includes/footer.php';
 
+// Approve Appointment
 if (isset($_POST['Approve'])) {
     $id = $_POST['appointment_id'];
 
     $getDetailsQuery = "
-        SELECT appointments.id AS appointment_id, appointments.*, users.full_name, users.email 
+        SELECT appointments.id AS appointment_id, appointments.*, 
+               users.full_name, users.email, doctors.full_name AS doctor_name 
         FROM appointments 
         JOIN users ON users.id = appointments.user_id 
+        JOIN doctors ON doctors.id = appointments.doctor_id 
         WHERE appointments.id = $id
     ";
     $result = mysqli_query($conn, $getDetailsQuery);
@@ -176,13 +184,16 @@ if (isset($_POST['Approve'])) {
     }
 }
 
+// Cancel Appointment
 if (isset($_POST['Cancelled'])) {
     $id = $_POST['appointment_id'];
 
     $getDetailsQuery = "
-        SELECT appointments.id AS appointment_id, appointments.*, users.full_name, users.email 
+        SELECT appointments.id AS appointment_id, appointments.*, 
+               users.full_name, users.email, doctors.full_name AS doctor_name 
         FROM appointments 
         JOIN users ON users.id = appointments.user_id 
+        JOIN doctors ON doctors.id = appointments.doctor_id 
         WHERE appointments.id = $id
     ";
     $result = mysqli_query($conn, $getDetailsQuery);
