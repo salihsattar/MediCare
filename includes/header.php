@@ -49,13 +49,15 @@
     <div class="collapse navbar-collapse" id="navbarCollapse">
         <div class="navbar-nav ms-auto p-4 p-lg-0">
             <a href="index.php" class="nav-item nav-link text-light active">Home</a>
-            <a href="service.php" class="nav-item nav-link text-light">Service</a>
-            <a href="team.php" class="nav-item nav-link text-light">Doctors</a>
-            <a href="contact.php" class="nav-item nav-link text-light">Contact</a>
-            <a href="about.php" class="nav-item nav-link text-light">About</a>
+            <!-- <a href="service.php" class="nav-item nav-link text-light">Service</a> -->
+            <!-- <a href="team.php" class="nav-item nav-link text-light">Doctors</a> -->
+            <!-- <a href="contact.php" class="nav-item nav-link text-light">Contact</a>
+            <a href="about.php" class="nav-item nav-link text-light">About</a> -->
             <?php if (isset($_SESSION['user_id']) && isset($_SESSION['is_admin'])==1) { ?>
-                <a href="manage_appointments.php" class="nav-item nav-link text-light">Manage Appointments</a>
-                <a href="manage_doctors.php" class="nav-item nav-link text-light">Manage Doctors</a>
+                <a href="manage_appointments.php" class="nav-item nav-link text-light">Appointments</a>
+                <a href="manage_doctors.php" class="nav-item nav-link text-light">Doctors</a>
+                <a href="manage_employees.php" class="nav-item nav-link text-light">Employees</a>
+                <a href="manage_employee_family.php" class="nav-item nav-link text-light">Employee Family</a>
             <?php }  else if (isset($_SESSION['user_id'])) { ?>
                 <a href="appointment.php" class="nav-item nav-link text-light">Appointment</a>
                 <a href="view_appointments.php" class="nav-item nav-link text-light">My Appointments</a>
