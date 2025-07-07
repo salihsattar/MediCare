@@ -11,13 +11,19 @@ $user_id = $_SESSION['user_id'];
 
 $selectQuery = "
     SELECT 
-        appointments.id AS appointment_id, 
-        appointments.*, 
-        users.full_name AS patient_name, 
-        doctors.full_name AS doctor_name
-    FROM appointments 
-    JOIN users ON users.id = appointments.user_id
-    JOIN doctors ON doctors.id = appointments.doctor_id
+        a.id AS appointment_id,
+        a.*, 
+        d.full_name AS doctor_name,
+        CASE 
+            WHEN a.appointment_type = 'self' THEN e.full_name
+            WHEN a.appointment_type = 'family' THEN ef.name
+            ELSE 'Unknown'
+        END AS patient_name
+    FROM appointments a
+    LEFT JOIN doctors d ON a.doctor_id = d.id
+    LEFT JOIN employees e ON a.appointment_type = 'self' AND a.person_id = e.id
+    LEFT JOIN employee_family ef ON a.appointment_type = 'family' AND a.person_id = ef.id
+    ORDER BY a.id DESC
 ";
 $runQuery = mysqli_query($conn, $selectQuery);
 ?>
@@ -113,6 +119,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <th>ID</th>
                     <th>Doctor</th>
                     <th>Patient</th>
+                    <th>Type</th>
                     <th>Appointment Date</th>
                     <th>Description</th>
                     <th>Action</th>
@@ -122,8 +129,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 <?php while ($data = mysqli_fetch_array($runQuery)) { ?>
                     <tr>
                         <td><?php echo $data['appointment_id']; ?></td>
-                        <td><?php echo $data['doctor_name']; ?></td>
+                        <td><?php echo $data['doctor_name'] ?: 'N/A'; ?></td>
                         <td><?php echo $data['patient_name']; ?></td>
+                        <td><?php echo ucfirst($data['appointment_type']); ?></td>
                         <td><?php echo $data['appointment_date']; ?></td>
                         <td><?php echo $data['description']; ?></td>
                         <td>
@@ -150,66 +158,37 @@ document.addEventListener('DOMContentLoaded', function () {
 <?php
 include 'includes/footer.php';
 
-// Approve Appointment
-if (isset($_POST['Approve'])) {
+if (isset($_POST['Approve']) || isset($_POST['Cancelled'])) {
     $id = $_POST['appointment_id'];
+    $status = isset($_POST['Approve']) ? 'Approved' : 'Cancelled';
 
     $getDetailsQuery = "
-        SELECT appointments.id AS appointment_id, appointments.*, 
-               users.full_name, users.email, doctors.full_name AS doctor_name 
-        FROM appointments 
-        JOIN users ON users.id = appointments.user_id 
-        JOIN doctors ON doctors.id = appointments.doctor_id 
-        WHERE appointments.id = $id
+        SELECT a.*, u.email, u.full_name AS user_name, d.full_name AS doctor_name
+        FROM appointments a
+        JOIN users u ON a.user_id = u.id
+        LEFT JOIN doctors d ON a.doctor_id = d.id
+        WHERE a.id = $id
     ";
     $result = mysqli_query($conn, $getDetailsQuery);
     $appointment = mysqli_fetch_assoc($result);
 
-    $updateQuery = "UPDATE appointments SET status='Approved' WHERE id=$id";
+    $updateQuery = "UPDATE appointments SET status='$status' WHERE id=$id";
     $runUpdate = mysqli_query($conn, $updateQuery);
 
     if ($runUpdate) {
         $to = $appointment['email'];
-        $subject = "Your Appointment is Approved";
-        $message = "Dear " . $appointment['full_name'] . ",\n\n";
-        $message .= "We are pleased to inform you that your appointment on " . $appointment['appointment_date'];
-        $message .= " with Dr. " . $appointment['doctor_name'] . " has been successfully approved.\n\n";
-        $message .= "Thank you for choosing our clinic.\n\nRegards,\nClinic Team";
+        $subject = "Your Appointment is $status";
+        $message = "Dear " . $appointment['user_name'] . ",\n\n";
 
-        $headers = "From: noreply@yourdomain.com\r\n";
-        $message = wordwrap($message, 70);
+        if ($status === 'Approved') {
+            $message .= "We are pleased to inform you that your appointment on " . $appointment['appointment_date'];
+            $message .= " with Dr. " . $appointment['doctor_name'] . " has been successfully approved.";
+        } else {
+            $message .= "We regret to inform you that your appointment on " . $appointment['appointment_date'];
+            $message .= " with Dr. " . $appointment['doctor_name'] . " has been cancelled.";
+        }
 
-        mail($to, $subject, $message, $headers);
-        echo "<script>window.location.href='manage_appointments.php';</script>";
-    }
-}
-
-// Cancel Appointment
-if (isset($_POST['Cancelled'])) {
-    $id = $_POST['appointment_id'];
-
-    $getDetailsQuery = "
-        SELECT appointments.id AS appointment_id, appointments.*, 
-               users.full_name, users.email, doctors.full_name AS doctor_name 
-        FROM appointments 
-        JOIN users ON users.id = appointments.user_id 
-        JOIN doctors ON doctors.id = appointments.doctor_id 
-        WHERE appointments.id = $id
-    ";
-    $result = mysqli_query($conn, $getDetailsQuery);
-    $appointment = mysqli_fetch_assoc($result);
-
-    $updateQuery = "UPDATE appointments SET status='Cancelled' WHERE id=$id";
-    $runUpdate = mysqli_query($conn, $updateQuery);
-
-    if ($runUpdate) {
-        $to = $appointment['email'];
-        $subject = "Your Appointment is Cancelled";
-        $message = "Dear " . $appointment['full_name'] . ",\n\n";
-        $message .= "We regret to inform you that your appointment on " . $appointment['appointment_date'];
-        $message .= " with Dr. " . $appointment['doctor_name'] . " has been cancelled.\n\n";
-        $message .= "If you have any questions or wish to reschedule, please contact our clinic.\n\nRegards,\nClinic Team";
-
+        $message .= "\n\nThank you for choosing our clinic.\n\nRegards,\nClinic Team";
         $headers = "From: noreply@yourdomain.com\r\n";
         $message = wordwrap($message, 70);
 

@@ -12,9 +12,11 @@ if (isset($_POST['appointment-btn'])) {
     $appointment_date = $_POST['appointment_date'];
     $description = $_POST['description'];
     $user_id = $_SESSION['user_id'];
+    $appointment_type = $_POST['appointment_type'];
+    $person_id = $_POST['person_id'];
 
-    $InsertQuery = "INSERT INTO appointments (user_id, doctor_id, appointment_date, description)
-                    VALUES ('$user_id', '$doctor_id', '$appointment_date', '$description')";
+    $InsertQuery = "INSERT INTO appointments (user_id, doctor_id, appointment_date, description, appointment_type, person_id)
+                    VALUES ('$user_id', '$doctor_id', '$appointment_date', '$description', '$appointment_type', '$person_id')";
     $runQuery = mysqli_query($conn, $InsertQuery);
 
     if ($runQuery) {
@@ -26,120 +28,108 @@ if (isset($_POST['appointment-btn'])) {
 ?>
 
 <script>
-    function loadDoctorDetails(doctorId) {
-        if (!doctorId) return;
+function togglePersonFields() {
+    const type = document.getElementById('appointment_for').value;
+    document.getElementById('appointment_type').value = type;
 
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "doctor_task.php", true);
-        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-        xhr.onload = function () {
-            if (xhr.status === 200) {
-                document.getElementById("doctor-info").innerHTML = xhr.responseText;
-            }
-        };
-
-        xhr.send("doctor_id=" + doctorId);
+    if (type === 'self') {
+        document.getElementById('employee_fields').style.display = 'block';
+        document.getElementById('family_fields').style.display = 'none';
+    } else if (type === 'family') {
+        document.getElementById('employee_fields').style.display = 'none';
+        document.getElementById('family_fields').style.display = 'block';
+    } else {
+        document.getElementById('employee_fields').style.display = 'none';
+        document.getElementById('family_fields').style.display = 'none';
     }
+}
+
+function fetchEmployeeDetails() {
+    const serviceNo = document.getElementById('service_no').value;
+    if (!serviceNo) return;
+
+    fetch("fetch_employee_family.php", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: "service_no=" + serviceNo
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('employee_name').value = data.employee.full_name;
+            document.getElementById('employee_designation').value = data.employee.designation;
+            document.getElementById('person_id').value = data.employee.id;
+
+            const famSelect = document.getElementById('family_member_select');
+            famSelect.innerHTML = '<option value="">-- Select Family Member --</option>';
+            data.family.forEach(member => {
+                famSelect.innerHTML += `<option value="${member.id}" data-name="${member.name}" data-rel="${member.relationship}">${member.name} (${member.relationship})</option>`;
+            });
+        } else {
+            alert("Service number not found.");
+        }
+    });
+}
+
+function fillFamilyMemberDetails() {
+    const selected = document.getElementById('family_member_select');
+    const selectedId = selected.value;
+    document.getElementById('person_id').value = selectedId;
+}
 </script>
-
-
-<div class="container-fluid page-header py-5 mb-5 wow fadeIn" data-wow-delay="0.1s">
-    <div class="container py-5">
-        <h1 class="display-3 text-white mb-3 animated slideInDown">Appointment</h1>
-        <nav aria-label="breadcrumb animated slideInDown">
-            <ol class="breadcrumb text-uppercase mb-0">
-                <li class="breadcrumb-item"><a class="text-white" href="#">Home</a></li>
-                <li class="breadcrumb-item"><a class="text-white" href="#">Pages</a></li>
-                <li class="breadcrumb-item text-primary active" aria-current="page">Appointment</li>
-            </ol>
-        </nav>
-    </div>
-</div>
 
 <div class="container-xxl py-5">
     <div class="container">
-        <div class="row g-5">
-            <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
-                <p class="d-inline-block border rounded-pill py-1 px-4">Appointment</p>
-                <h1 class="mb-4">Make An Appointment To Visit Our Doctor</h1>
+        <form action="" method="POST">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label>Service Number</label>
+                    <input type="text" id="service_no" class="form-control border-0" placeholder="Enter Service Number" required onblur="fetchEmployeeDetails()" style="height: 55px;" />
+                </div>
 
-                <div class="bg-light rounded d-flex align-items-center p-5 mb-4">
-                    <div class="d-flex flex-shrink-0 align-items-center justify-content-center rounded-circle bg-white"
-                        style="width: 55px; height: 55px;">
-                        <i class="fa fa-phone-alt text-primary"></i>
+                <div class="col-12">
+                    <label>Appointment For</label>
+                    <select id="appointment_for" class="form-select border-0" required onchange="togglePersonFields()" style="height: 55px;">
+                        <option value="">-- Select --</option>
+                        <option value="self">Employee (Self)</option>
+                        <option value="family">Family Member</option>
+                    </select>
+                </div>
+
+                <div id="employee_fields" style="display: none;">
+                    <div class="col-12">
+                        <label>Employee Name</label>
+                        <input type="text" id="employee_name" class="form-control border-0" readonly />
                     </div>
-                    <div class="ms-4">
-                        <p class="mb-2">Call Us Now</p>
-                        <h5 class="mb-0">+012 345 6789</h5>
+                    <div class="col-12">
+                        <label>Designation</label>
+                        <input type="text" id="employee_designation" class="form-control border-0" readonly />
                     </div>
                 </div>
 
-                <div class="bg-light rounded d-flex align-items-center p-5">
-                    <div class="d-flex flex-shrink-0 align-items-center justify-content-center rounded-circle bg-white"
-                        style="width: 55px; height: 55px;">
-                        <i class="fa fa-envelope-open text-primary"></i>
-                    </div>
-                    <div class="ms-4">
-                        <p class="mb-2">Mail Us Now</p>
-                        <h5 class="mb-0">info@example.com</h5>
-                    </div>
+                <div id="family_fields" class="col-12" style="display: none;">
+                    <label>Select Family Member</label>
+                    <select id="family_member_select" class="form-select border-0" onchange="fillFamilyMemberDetails()" style="height: 55px;">
+                        <option value="">-- Select Family Member --</option>
+                    </select>
                 </div>
-            </div>
 
-            <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.5s">
-                <div class="bg-light rounded h-100 d-flex align-items-center p-5">
-                    <form action="" method="POST">
-                        <div class="row g-3">
+                <div class="col-12 col-sm-12">
+                    <input type="date" name="appointment_date" class="form-control border-0" style="height: 55px;" required>
+                </div>
 
-                            <div class="col-12 col-sm-12 pb-3">
-                                <select name="doctor_id" id="doctor_id" class="form-select border-0"
-                                    style="height: 55px;" required onchange="loadDoctorDetails(this.value)">
-                                    <option value="" selected disabled>Choose Doctor</option>
-                                    <?php
-                                    $doctorQuery = "SELECT id, full_name, specialty FROM doctors ORDER BY full_name ASC";
-                                    $doctorResult = mysqli_query($conn, $doctorQuery);
-                                    if ($doctorResult && mysqli_num_rows($doctorResult) > 0) {
-                                        while ($doctor = mysqli_fetch_assoc($doctorResult)) {
-                                            $id = $doctor['id'];
-                                            $name = htmlspecialchars($doctor['full_name']);
-                                            $specialty = htmlspecialchars($doctor['specialty']);
-                                            echo "<option value=\"$id\">$name ($specialty)</option>";
-                                        }
-                                    } else {
-                                        echo "<option disabled>No doctors available</option>";
-                                    }
-                                    ?>
-                                </select>
-                            </div>
-                            <br>
-                            <br>
-                            <!-- Show Doctor Info -->
-                            <div class="col-12" id="doctor-info"
-                                style="margin-top: -10px; padding-left: 12px; color: #333;"></div>
+                <div class="col-12">
+                    <textarea class="form-control border-0" name="description" rows="5" placeholder="Describe your problem" required></textarea>
+                </div>
 
+                <input type="hidden" name="appointment_type" id="appointment_type" />
+                <input type="hidden" name="person_id" id="person_id" />
 
-                            <div class="col-12 col-sm-12">
-                                <input type="date" name="appointment_date" class="form-control border-0"
-                                    placeholder="Appointment Date" style="height: 55px;" required>
-                            </div>
-
-                            <div class="col-12">
-                                <textarea class="form-control border-0" name="description" rows="5"
-                                    placeholder="Describe your problem" required></textarea>
-                            </div>
-
-                            <div class="col-12">
-                                <input class="btn btn-primary w-100 py-3" name="appointment-btn" type="submit"
-                                    value="Book Appointment" />
-                            </div>
-
-                        </div>
-                    </form>
+                <div class="col-12">
+                    <input class="btn btn-primary w-100 py-3" name="appointment-btn" type="submit" value="Book Appointment" />
                 </div>
             </div>
-
-        </div>
+        </form>
     </div>
 </div>
 
