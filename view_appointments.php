@@ -8,20 +8,25 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
+
+// Get appointments with doctor and patient names
 $selectQuery = "
-    SELECT a.*, d.full_name AS doctor_name,
-           CASE 
-               WHEN a.appointment_type = 'self' THEN e.full_name
-               WHEN a.appointment_type = 'family' THEN ef.name
-               ELSE 'Unknown'
-           END AS patient_name
+    SELECT 
+        a.*, 
+        doc.full_name AS doctor_name,
+        CASE 
+            WHEN a.appointment_type = 'self' THEN emp.full_name
+            WHEN a.appointment_type = 'family' THEN fam.name
+            ELSE 'Unknown'
+        END AS patient_name
     FROM appointments a
-    LEFT JOIN doctors d ON a.doctor_id = d.id
-    LEFT JOIN employees e ON a.appointment_type = 'self' AND a.person_id = e.id
-    LEFT JOIN employee_family ef ON a.appointment_type = 'family' AND a.person_id = ef.id
+    LEFT JOIN doctors doc ON a.doctor_id = doc.id
+    LEFT JOIN employees emp ON a.appointment_type = 'self' AND a.person_id = emp.id
+    LEFT JOIN employee_family fam ON a.appointment_type = 'family' AND a.person_id = fam.id
     WHERE a.user_id = $user_id
     ORDER BY a.id DESC
 ";
+
 $runQuery = mysqli_query($conn, $selectQuery);
 ?>
 
@@ -41,7 +46,7 @@ $runQuery = mysqli_query($conn, $selectQuery);
 <div class="container-xxl py-2">
     <div class="container mt-2">
         <table class="table table-bordered table-striped">
-            <thead class="table">
+            <thead class="table-dark">
                 <tr>
                     <th>ID</th>
                     <th>Doctor</th>
@@ -53,15 +58,21 @@ $runQuery = mysqli_query($conn, $selectQuery);
                 </tr>
             </thead>
             <tbody>
-                <?php while ($data = mysqli_fetch_array($runQuery)) { ?>
+                <?php if (mysqli_num_rows($runQuery) > 0) { ?>
+                    <?php while ($data = mysqli_fetch_array($runQuery)) { ?>
+                        <tr>
+                            <td><?php echo $data['id']; ?></td>
+                            <td><?php echo htmlspecialchars($data['doctor_name'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($data['appointment_date']); ?></td>
+                            <td><?php echo htmlspecialchars($data['description']); ?></td>
+                            <td><?php echo htmlspecialchars($data['patient_name']); ?></td>
+                            <td><?php echo ucfirst(htmlspecialchars($data['appointment_type'])); ?></td>
+                            <td><?php echo htmlspecialchars($data['status'] ?? 'Pending'); ?></td>
+                        </tr>
+                    <?php } ?>
+                <?php } else { ?>
                     <tr>
-                        <td><?php echo $data['id']; ?></td>
-                        <td><?php echo $data['doctor_name'] ? htmlspecialchars($data['doctor_name']) : 'N/A'; ?></td>
-                        <td><?php echo htmlspecialchars($data['appointment_date']); ?></td>
-                        <td><?php echo htmlspecialchars($data['description']); ?></td>
-                        <td><?php echo htmlspecialchars($data['patient_name']); ?></td>
-                        <td><?php echo htmlspecialchars(ucfirst($data['appointment_type'])); ?></td>
-                        <td><?php echo htmlspecialchars($data['status']); ?></td>
+                        <td colspan="7" class="text-center">No appointments found.</td>
                     </tr>
                 <?php } ?>
             </tbody>

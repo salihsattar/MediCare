@@ -25,6 +25,10 @@ if (isset($_POST['appointment-btn'])) {
         echo "Error: " . mysqli_error($conn);
     }
 }
+
+// Fetch doctors
+$doctor_query = "SELECT id, full_name, specialty FROM doctors ORDER BY full_name ASC";
+$doctor_result = mysqli_query($conn, $doctor_query);
 ?>
 
 <script>
@@ -82,11 +86,26 @@ function fillFamilyMemberDetails() {
     <div class="container">
         <form action="" method="POST">
             <div class="row g-3">
+                <!-- Doctor Dropdown -->
+                <div class="col-12">
+                    <label for="doctor_id">Select Doctor</label>
+                    <select name="doctor_id" id="doctor_id" class="form-select border-0" required style="height: 55px;">
+                        <option value="">-- Select Doctor --</option>
+                        <?php while ($doctor = mysqli_fetch_assoc($doctor_result)) { ?>
+                            <option value="<?= $doctor['id'] ?>">
+                                <?= htmlspecialchars($doctor['full_name']) ?> (<?= htmlspecialchars($doctor['specialty']) ?>)
+                            </option>
+                        <?php } ?>
+                    </select>
+                </div>
+
+                <!-- Service Number -->
                 <div class="col-12">
                     <label>Service Number</label>
                     <input type="text" id="service_no" class="form-control border-0" placeholder="Enter Service Number" required onblur="fetchEmployeeDetails()" style="height: 55px;" />
                 </div>
 
+                <!-- Appointment For -->
                 <div class="col-12">
                     <label>Appointment For</label>
                     <select id="appointment_for" class="form-select border-0" required onchange="togglePersonFields()" style="height: 55px;">
@@ -96,6 +115,7 @@ function fillFamilyMemberDetails() {
                     </select>
                 </div>
 
+                <!-- Employee Fields -->
                 <div id="employee_fields" style="display: none;">
                     <div class="col-12">
                         <label>Employee Name</label>
@@ -107,6 +127,7 @@ function fillFamilyMemberDetails() {
                     </div>
                 </div>
 
+                <!-- Family Fields -->
                 <div id="family_fields" class="col-12" style="display: none;">
                     <label>Select Family Member</label>
                     <select id="family_member_select" class="form-select border-0" onchange="fillFamilyMemberDetails()" style="height: 55px;">
@@ -114,17 +135,21 @@ function fillFamilyMemberDetails() {
                     </select>
                 </div>
 
+                <!-- Appointment Date -->
                 <div class="col-12 col-sm-12">
                     <input type="date" name="appointment_date" class="form-control border-0" style="height: 55px;" required>
                 </div>
 
+                <!-- Description -->
                 <div class="col-12">
                     <textarea class="form-control border-0" name="description" rows="5" placeholder="Describe your problem" required></textarea>
                 </div>
 
+                <!-- Hidden Fields -->
                 <input type="hidden" name="appointment_type" id="appointment_type" />
                 <input type="hidden" name="person_id" id="person_id" />
 
+                <!-- Submit Button -->
                 <div class="col-12">
                     <input class="btn btn-primary w-100 py-3" name="appointment-btn" type="submit" value="Book Appointment" />
                 </div>

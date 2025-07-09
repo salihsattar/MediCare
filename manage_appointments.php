@@ -25,6 +25,7 @@ $selectQuery = "
     LEFT JOIN employee_family ef ON a.appointment_type = 'family' AND a.person_id = ef.id
     ORDER BY a.id DESC
 ";
+
 $runQuery = mysqli_query($conn, $selectQuery);
 ?>
 
@@ -122,18 +123,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     <th>Type</th>
                     <th>Appointment Date</th>
                     <th>Description</th>
-                    <th>Action</th>
+                    <th>Status / Action</th>
                 </tr>
             </thead>
             <tbody>
                 <?php while ($data = mysqli_fetch_array($runQuery)) { ?>
                     <tr>
                         <td><?php echo $data['appointment_id']; ?></td>
-                        <td><?php echo $data['doctor_name'] ?: 'N/A'; ?></td>
-                        <td><?php echo $data['patient_name']; ?></td>
-                        <td><?php echo ucfirst($data['appointment_type']); ?></td>
-                        <td><?php echo $data['appointment_date']; ?></td>
-                        <td><?php echo $data['description']; ?></td>
+                        <td><?php echo htmlspecialchars($data['doctor_name'] ?? 'N/A'); ?></td>
+                        <td><?php echo htmlspecialchars($data['patient_name']); ?></td>
+                        <td><?php echo ucfirst(htmlspecialchars($data['appointment_type'])); ?></td>
+                        <td><?php echo htmlspecialchars($data['appointment_date']); ?></td>
+                        <td><?php echo htmlspecialchars($data['description']); ?></td>
                         <td>
                             <?php if ($data['status'] == 'Pending') { ?>
                                 <a href="#" class="btn btn-success btn-sm open-approve-modal" data-id="<?php echo $data['appointment_id']; ?>" title="Approve Appointment">
@@ -166,7 +167,7 @@ if (isset($_POST['Approve']) || isset($_POST['Cancelled'])) {
         SELECT a.*, u.email, u.full_name AS user_name, d.full_name AS doctor_name
         FROM appointments a
         JOIN users u ON a.user_id = u.id
-        LEFT JOIN doctors d ON a.doctor_id = d.id
+        LEFT JOIN doctor d ON a.doctor_id = d.id
         WHERE a.id = $id
     ";
     $result = mysqli_query($conn, $getDetailsQuery);
